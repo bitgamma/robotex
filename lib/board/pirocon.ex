@@ -49,8 +49,8 @@ defmodule Robotex.Board.Pirocon do
     {:reply, :ok, state}
   end
   def handle_call(:read_obstacle_sensors, _from, state = %{obstacle_sensors: {obstacle_sensor_left, obstacle_sensor_right}}) do
-    left = Gpio.read(obstacle_sensor_left) == 1
-    right = Gpio.read(obstacle_sensor_right) == 1
+    left = Gpio.read(obstacle_sensor_left) == 0
+    right = Gpio.read(obstacle_sensor_right) == 0
 
     {:reply, {left, right}, state}
   end
