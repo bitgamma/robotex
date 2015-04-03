@@ -19,13 +19,19 @@ defmodule Robotex.SoftPWM do
     :ok
   end
 
-  def run(state = %{channel: channel, timings: {high_time, low_time}}) do
-    if (high_time > 0) do
-      Gpio.write(channel, 1)
-      Robotex.Util.usleep(high_time)
-      Gpio.write(channel, 0)
+  def run(state = %{timings: {0, _}}) do
+    {action, _, state} = receive do
+      msg ->
+        handle_call(msg, self, state)
     end
 
+    next(action, state)
+  end
+
+  def run(state = %{channel: channel, timings: {high_time, low_time}}) do
+    Gpio.write(channel, 1)
+    Robotex.Util.usleep(high_time)
+    Gpio.write(channel, 0)
     Robotex.Util.usleep(low_time)
 
     {action, _, state} = receive do
@@ -35,10 +41,11 @@ defmodule Robotex.SoftPWM do
         {:reply, :ok, state}
     end
 
-    if action != :stop do
-      run(state)
-    end
+    next(action, state)
   end
+
+  defp next(:stop, _), do: :stop
+  defp next(_, state), do: run(state)
 
   def init(opts) do
     pin = Keyword.fetch!(opts, :pin)
