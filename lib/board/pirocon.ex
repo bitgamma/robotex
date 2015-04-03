@@ -43,20 +43,24 @@ defmodule Robotex.Board.Pirocon do
     GenServer.call(pid, {:set_motors, 0, speed, 0, speed})
   end
 
-  def spinLeft(pid, speed) when speed >= 0 and speed <= 100 do
+  def spin_left(pid, speed) when speed >= 0 and speed <= 100 do
     GenServer.call(pid, {:set_motors, 0, speed, speed, 0})
   end
 
-  def spinRight(pid, speed) when speed >= 0 and speed <= 100 do
+  def spin_light(pid, speed) when speed >= 0 and speed <= 100 do
     GenServer.call(pid, {:set_motors, speed, 0, 0, speed})
   end
 
-  def turnForward(pid, speed_left, speed_right) when speed_left >= 0 and speed_left <= 100 and speed_right >= 0 and speed_right <= 100 do
+  def turn_forward(pid, speed_left, speed_right) when speed_left >= 0 and speed_left <= 100 and speed_right >= 0 and speed_right <= 100 do
     GenServer.call(pid, {:set_motors, speed_left, 0, speed_right, 0})
   end
 
-  def turnReverse(pid, speed_left, speed_right) when speed_left >= 0 and speed_left <= 100 and speed_right >= 0 and speed_right <= 100 do
+  def turn_backward(pid, speed_left, speed_right) when speed_left >= 0 and speed_left <= 100 and speed_right >= 0 and speed_right <= 100 do
     GenServer.call(pid, {:set_motors, 0, speed_left, 0, speed_right})
+  end
+
+  def stop(pid) do
+    GenServer.call(pid, {:set_motors, 0, 0, 0, 0})
   end
 
   def init(_) do
