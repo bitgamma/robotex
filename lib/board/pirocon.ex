@@ -87,6 +87,8 @@ defmodule Robotex.Board.Pirocon do
       after 100 -> :erlang.now
     end
 
+    Gpio.release(sonar)
+
     elapsed = :timer.now_diff(stop, start) / 1_000_000
 
     # Distance pulse travelled in that time is time multiplied by the speed of sound (cm/s)
