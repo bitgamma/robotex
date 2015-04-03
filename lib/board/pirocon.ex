@@ -31,6 +31,10 @@ defmodule Robotex.Board.Pirocon do
     GenServer.call(pid, :read_line_sensors)
   end
 
+  def get_distance(pid) do
+    GenServer.call(pid, :get_distance)
+  end
+
   def init(_) do
     {:ok, obstacle_sensor_left} = Gpio.start_link(@obstacle_sensor_left, :input)
     {:ok, obstacle_sensor_right} = Gpio.start_link(@obstacle_sensor_right, :input)
@@ -46,7 +50,7 @@ defmodule Robotex.Board.Pirocon do
     Gpio.release(line_sensor_left)
     Gpio.release(line_sensor_right)
 
-    {:reply, :ok, state}
+    {:stop, :normal, state}
   end
   def handle_call(:read_obstacle_sensors, _from, state = %{obstacle_sensors: {obstacle_sensor_left, obstacle_sensor_right}}) do
     left = Gpio.read(obstacle_sensor_left) == 0
@@ -59,5 +63,35 @@ defmodule Robotex.Board.Pirocon do
     right = Gpio.read(line_sensor_right) == 1
 
     {:reply, {left, right}, state}
+  end
+  def handle_call(:get_distance, _from, state) do
+    {:ok, sonar} = Gpio.start_link(@sonar, :output)
+    Gpio.write(sonar, 1)
+    Robotex.Util.usleep(10)
+    Gpio.write(sonar, 0)
+
+    Gpio.release(sonar)
+    {:ok, sonar} = Gpio.start_link(@sonar, :input)
+
+    Gpio.set_int(sonar, :rising)
+
+    start = receive do
+      {:gpio_interrupt, @sonar, :rising} -> :erlang.now
+      after 100 -> :erlang.now
+    end
+
+    Gpio.set_int(sonar, :falling)
+
+    stop = receive do
+      {:gpio_interrupt, @sonar, :falling} -> :erlang.now
+      after 100 -> :erlang.now
+    end
+
+    elapsed = :timer.now_diff(stop, start) / 1_000_000
+
+    # Distance pulse travelled in that time is time multiplied by the speed of sound (cm/s)
+    distance = (elapsed * 34000) / 2
+
+    {:reply, distance, state}
   end
 end
