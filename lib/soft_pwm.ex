@@ -27,7 +27,6 @@ defmodule Robotex.SoftPWM do
 
     next(action, state)
   end
-
   def run(state = %{channel: channel, timings: {high_time, low_time}}) do
     Gpio.write(channel, 1)
     Robotex.Util.usleep(high_time)
