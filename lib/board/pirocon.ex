@@ -37,7 +37,7 @@ defmodule Robotex.Board.Pirocon do
     {:ok, line_sensor_left} = Gpio.start_link(@line_sensor_left, :input)
     {:ok, line_sensor_right} = Gpio.start_link(@line_sensor_right, :input)
 
-    %{obstacle_sensors: {obstacle_sensor_left, obstacle_sensor_right}, line_sensors: {line_sensor_left, line_sensor_right}}
+    {:ok, %{obstacle_sensors: {obstacle_sensor_left, obstacle_sensor_right}, line_sensors: {line_sensor_left, line_sensor_right}}}
   end
 
   def handle_call(:release, _from, state = %{obstacle_sensors: {obstacle_sensor_left, obstacle_sensor_right}, line_sensors: {line_sensor_left, line_sensor_right}}) do
