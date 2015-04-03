@@ -87,6 +87,7 @@ defmodule Robotex.Board.Pirocon do
       after 100 -> :erlang.now
     end
 
+    Gpio.set_int(sonar, :none)
     Gpio.release(sonar)
 
     elapsed = :timer.now_diff(stop, start) / 1_000_000
