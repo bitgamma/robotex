@@ -47,7 +47,7 @@ defmodule Robotex.Board.Pirocon do
     GenServer.call(pid, {:set_motors, 0, speed, speed, 0})
   end
 
-  def spin_light(pid, speed) when speed >= 0 and speed <= 100 do
+  def spin_right(pid, speed) when speed >= 0 and speed <= 100 do
     GenServer.call(pid, {:set_motors, speed, 0, 0, speed})
   end
 
