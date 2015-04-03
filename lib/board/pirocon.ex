@@ -65,6 +65,7 @@ defmodule Robotex.Board.Pirocon do
     {:reply, {left, right}, state}
   end
   def handle_call(:get_distance, _from, state) do
+    #TODO extract this in a separate module, requires more performant GPIO to actually work
     {:ok, sonar} = Gpio.start_link(@sonar, :output)
     Gpio.write(sonar, 1)
     Robotex.Util.usleep(10)
