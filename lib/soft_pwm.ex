@@ -19,6 +19,11 @@ defmodule Robotex.SoftPWM do
     :ok
   end
 
+  def set_frequency_and_duty_cycle(pid, frequency, duty_cycle) do
+    send pid, {:frequency_duty_cycle, frequency, duty_cycle}
+    :ok
+  end
+
   def run(state = %{timings: {0, _}}) do
     {action, _, state} = receive do
       msg ->
@@ -64,9 +69,12 @@ defmodule Robotex.SoftPWM do
   def handle_call({:frequency, frequency}, _from, state = %{duty_cycle: duty_cycle}) do
     {:reply, :ok, %{state | frequency: frequency, timings: calculate_timings_usec(frequency, duty_cycle)}}
   end
+  def handle_call({:frequency_duty_cycle, frequency, duty_cycle}, _from, state) do
+    {:reply, :ok, %{state | frequency: frequency, duty_cycle: duty_cycle, timings: calculate_timings_usec(frequency, duty_cycle)}}
+  end
 
-  defp calculate_timings_usec(0, _), do: {0, 1000}
-  defp calculate_timings_usec(_, 0), do: {0, 1000}
+  defp calculate_timings_usec(0, _), do: {0, 0}
+  defp calculate_timings_usec(_, 0), do: {0, 0}
   defp calculate_timings_usec(frequency, duty_cycle) do
     duration_usec = (1.0 / frequency) * 1_000_000
     high_duration_usec = (duration_usec / 100) * duty_cycle
