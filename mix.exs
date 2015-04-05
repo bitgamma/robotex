@@ -25,6 +25,6 @@ defmodule Robotex.Mixfile do
   #
   # Type `mix help deps` for more examples and options
   defp deps do
-    [{:elixir_ale, "~> 0.3"}]
+    [{:ex_pigpio, github: "briksoftware/ex_pigpio"}]
   end
 end

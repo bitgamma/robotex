@@ -19,8 +19,8 @@ defmodule Robotex.Board.Pirocon do
     GenServer.start_link(__MODULE__, [])
   end
 
-  def release(pid) do
-    GenServer.call(pid, :release)
+  def stop(pid) do
+    GenServer.call(pid, :stop)
   end
 
   def read_obstacle_sensors(pid) do
@@ -64,52 +64,44 @@ defmodule Robotex.Board.Pirocon do
   end
 
   def init(_) do
-    {:ok, obstacle_sensor_left} = Gpio.start_link(@obstacle_sensor_left, :input)
-    {:ok, obstacle_sensor_right} = Gpio.start_link(@obstacle_sensor_right, :input)
-    {:ok, line_sensor_left} = Gpio.start_link(@line_sensor_left, :input)
-    {:ok, line_sensor_right} = Gpio.start_link(@line_sensor_right, :input)
-    {:ok, motor_left_forward} = Robotex.SoftPWM.start_link(pin: @motor_left_forward)
-    {:ok, motor_left_backward} = Robotex.SoftPWM.start_link(pin: @motor_left_backward)
-    {:ok, motor_right_forward} = Robotex.SoftPWM.start_link(pin: @motor_right_forward)
-    {:ok, motor_right_backward} = Robotex.SoftPWM.start_link(pin: @motor_right_backward)
+    :ok = ExPigpio.set_mode(@motor_left_forward, :output)
+    :ok = ExPigpio.set_mode(@motor_left_backward, :output)
+    :ok = ExPigpio.set_mode(@motor_right_forward, :output)
+    :ok = ExPigpio.set_mode(@motor_right_backward, :output)
 
-    {:ok, %{obstacle_sensors: {obstacle_sensor_left, obstacle_sensor_right}, line_sensors: {line_sensor_left, line_sensor_right}, motors: {motor_left_forward, motor_left_backward, motor_right_forward, motor_right_backward}}}
+    :ok = ExPigpio.set_mode(@obstacle_sensor_left, :input)
+    :ok = ExPigpio.set_mode(@obstacle_sensor_right, :input)
+    :ok = ExPigpio.set_mode(@line_sensor_left, :input)
+    :ok = ExPigpio.set_mode(@line_sensor_right, :input)
+
+    {:ok, :ok}
   end
 
-  def handle_call(:release, _from, state = %{obstacle_sensors: {obstacle_sensor_left, obstacle_sensor_right}, line_sensors: {line_sensor_left, line_sensor_right}, motors: {motor_left_forward, motor_left_backward, motor_right_forward, motor_right_backward}}) do
-    Gpio.release(obstacle_sensor_left)
-    Gpio.release(obstacle_sensor_right)
-    Gpio.release(line_sensor_left)
-    Gpio.release(line_sensor_right)
-    Robotex.SoftPWM.release(motor_left_forward)
-    Robotex.SoftPWM.release(motor_left_backward)
-    Robotex.SoftPWM.release(motor_right_forward)
-    Robotex.SoftPWM.release(motor_right_backward)
-
+  def handle_call(:stop, _from, state) do
     {:stop, :normal, state}
   end
-  def handle_call(:read_obstacle_sensors, _from, state = %{obstacle_sensors: {obstacle_sensor_left, obstacle_sensor_right}}) do
-    left = Gpio.read(obstacle_sensor_left) == 0
-    right = Gpio.read(obstacle_sensor_right) == 0
+  def handle_call(:read_obstacle_sensors, _from, state) do
+    left = ExPigpio.read(@obstacle_sensor_left) == 0
+    right = ExPigpio.read(@obstacle_sensor_right) == 0
 
     {:reply, {left, right}, state}
   end
-  def handle_call(:read_line_sensors, _from, state = %{line_sensors: {line_sensor_left, line_sensor_right}}) do
-    left = Gpio.read(line_sensor_left) == 1
-    right = Gpio.read(line_sensor_right) == 1
+  def handle_call(:read_line_sensors, _from, state) do
+    left = ExPigpio.read(@line_sensor_left) == 1
+    right = ExPigpio.read(@line_sensor_right) == 1
 
     {:reply, {left, right}, state}
   end
-  def handle_call({:set_motors, speed_left_fw, speed_left_bw, speed_right_fw, speed_right_bw}, _form, state = %{motors: {motor_left_forward, motor_left_backward, motor_right_forward, motor_right_backward}}) do
-    Robotex.SoftPWM.set_frequency_and_duty_cycle(motor_left_forward, speed_left_fw + 5, speed_left_fw)
-    Robotex.SoftPWM.set_frequency_and_duty_cycle(motor_left_backward, speed_left_bw + 5, speed_left_bw)
-    Robotex.SoftPWM.set_frequency_and_duty_cycle(motor_right_forward, speed_right_fw + 5, speed_right_fw)
-    Robotex.SoftPWM.set_frequency_and_duty_cycle(motor_right_backward, speed_right_bw + 5, speed_right_bw)
+  def handle_call({:set_motors, speed_left_fw, speed_left_bw, speed_right_fw, speed_right_bw}, _form, state) do
+    ExPigpio.set_pwm(@motor_left_forward, speed_left_fw)
+    ExPigpio.set_pwm(@motor_left_backward, speed_left_bw)
+    ExPigpio.set_pwm(@motor_right_forward, speed_right_fw)
+    ExPigpio.set_pwm(@motor_right_backward, speed_right_bw)
 
     {:reply, :ok, state}
   end
   def handle_call(:get_distance, _from, state) do
-    #TODO extract this in a separate module, requires more performant GPIO to actually work
+    #TODO extract this in a separate module
     {:ok, sonar} = Gpio.start_link(@sonar, :output)
     Gpio.write(sonar, 1)
     Robotex.Util.usleep(10)
