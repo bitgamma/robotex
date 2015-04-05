@@ -59,7 +59,7 @@ defmodule Robotex.Board.Pirocon do
     GenServer.call(pid, {:set_motors, 0, speed_left, 0, speed_right})
   end
 
-  def stop(pid) do
+  def halt(pid) do
     GenServer.call(pid, {:set_motors, 0, 0, 0, 0})
   end
 
