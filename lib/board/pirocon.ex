@@ -111,7 +111,7 @@ defmodule Robotex.Board.Pirocon do
     ExPigpio.udelay(10)
     :ok = ExPigpio.write(@sonar, 0)
 
-    :ok = ExPigpio.set_mode(@sonar, :output)
+    :ok = ExPigpio.set_mode(@sonar, :input)
 
     ExPigpio.add_alert(@sonar, self)
 
