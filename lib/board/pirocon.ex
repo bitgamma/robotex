@@ -124,9 +124,9 @@ defmodule Robotex.Board.Pirocon do
   defp receive_sonar_alerts(:stop, start, stop), do: {start, stop}
   defp receive_sonar_alerts(:next, start, stop) do
     receive do
-      {:gpio_alert, @sonar, 1, time} -> receive_alerts(:next, time, stop)
-      {:gpio_alert, @sonar, 0, time} -> receive_alerts(:next, start, time)
-      after 50 -> receive_alerts(:stop, start, stop)
+      {:gpio_alert, @sonar, 1, time} -> receive_sonar_alerts(:next, time, stop)
+      {:gpio_alert, @sonar, 0, time} -> receive_sonar_alerts(:next, start, time)
+      after 50 -> receive_sonar_alerts(:stop, start, stop)
     end
   end
 
