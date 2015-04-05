@@ -69,6 +69,11 @@ defmodule Robotex.Board.Pirocon do
     :ok = ExPigpio.set_mode(@motor_right_forward, :output)
     :ok = ExPigpio.set_mode(@motor_right_backward, :output)
 
+    :ok = ExPigpio.set_pwm_range(@motor_left_forward, 100)
+    :ok = ExPigpio.set_pwm_range(@motor_left_backward, 100)
+    :ok = ExPigpio.set_pwm_range(@motor_right_forward, 100)
+    :ok = ExPigpio.set_pwm_range(@motor_right_backward, 100)
+
     :ok = ExPigpio.set_mode(@obstacle_sensor_left, :input)
     :ok = ExPigpio.set_mode(@obstacle_sensor_right, :input)
     :ok = ExPigpio.set_mode(@line_sensor_left, :input)
@@ -101,31 +106,26 @@ defmodule Robotex.Board.Pirocon do
     {:reply, :ok, state}
   end
   def handle_call(:get_distance, _from, state) do
-    #TODO extract this in a separate module
-    {:ok, sonar} = Gpio.start_link(@sonar, :output)
-    Gpio.write(sonar, 1)
-    Robotex.Util.usleep(10)
-    Gpio.write(sonar, 0)
+    :ok = ExPigpio.set_mode(@sonar, :output)
+    :ok = ExPigpio.write(@sonar, 1)
+    ExPigpio.udelay(10)
+    :ok = ExPigpio.write(@sonar, 0)
 
-    Gpio.release(sonar)
-    {:ok, sonar} = Gpio.start_link(@sonar, :input)
+    :ok = ExPigpio.set_mode(@sonar, :output)
 
-    Gpio.set_int(sonar, :rising)
+    ExPigpio.add_alert(@sonar, self)
 
     start = receive do
-      {:gpio_interrupt, @sonar, :rising} -> :erlang.now
-      after 100 -> :erlang.now
+      {:gpio_alert, @sonar, 1, _} -> :os.timestamp
+      after 100 -> :os.timestamp
     end
-
-    Gpio.set_int(sonar, :falling)
 
     stop = receive do
-      {:gpio_interrupt, @sonar, :falling} -> :erlang.now
-      after 100 -> :erlang.now
+      {:gpio_alert, @sonar, 0, _} -> :os.timestamp
+      after 100 -> :os.timestamp
     end
 
-    Gpio.set_int(sonar, :none)
-    Gpio.release(sonar)
+    ExPigpio.remove_alert(@sonar, self)
 
     elapsed = :timer.now_diff(stop, start) / 1_000_000
 
