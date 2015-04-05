@@ -114,24 +114,22 @@ defmodule Robotex.Board.Pirocon do
     :ok = ExPigpio.set_mode(@sonar, :input)
 
     ExPigpio.add_alert(@sonar, self)
-
-    start = receive do
-      {:gpio_alert, @sonar, 1, _} -> :os.timestamp
-      after 100 -> :os.timestamp
-    end
-
-    stop = receive do
-      {:gpio_alert, @sonar, 0, _} -> :os.timestamp
-      after 100 -> :os.timestamp
-    end
-
+    {start, stop} = receive_sonar_alerts(:next, Inf, Inf)
     ExPigpio.remove_alert(@sonar, self)
 
-    elapsed = :timer.now_diff(stop, start) / 1_000_000
-
-    # Distance pulse travelled in that time is time multiplied by the speed of sound (cm/s)
-    distance = (elapsed * 34000) / 2
-
+    distance = calculate_distance_cm(start, stop)
     {:reply, distance, state}
   end
+
+  defp receive_sonar_alerts(:stop, start, stop), do: {start, stop}
+  defp receive_sonar_alerts(:next, start, stop) do
+    receive do
+      {:gpio_alert, @sonar, 1, time} -> receive_alerts(:next, time, stop)
+      {:gpio_alert, @sonar, 0, time} -> receive_alerts(:next, start, time)
+      after 50 -> receive_alerts(:stop, start, stop)
+    end
+  end
+
+  defp calculate_distance_cm(start, stop) when (start == Inf) or (stop == Inf) or (stop < start), do: Inf
+  defp calculate_distance_cm(start, stop), do: (((stop - start) * 340) / 2) / 10_000
 end
