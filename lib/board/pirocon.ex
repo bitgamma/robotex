@@ -69,10 +69,10 @@ defmodule Robotex.Board.Pirocon do
     :ok = ExPigpio.set_mode(@motor_right_forward, :output)
     :ok = ExPigpio.set_mode(@motor_right_backward, :output)
 
-    :ok = ExPigpio.set_pwm_range(@motor_left_forward, 100)
-    :ok = ExPigpio.set_pwm_range(@motor_left_backward, 100)
-    :ok = ExPigpio.set_pwm_range(@motor_right_forward, 100)
-    :ok = ExPigpio.set_pwm_range(@motor_right_backward, 100)
+    {:ok, _} = ExPigpio.set_pwm_range(@motor_left_forward, 100)
+    {:ok, _} = ExPigpio.set_pwm_range(@motor_left_backward, 100)
+    {:ok, _} = ExPigpio.set_pwm_range(@motor_right_forward, 100)
+    {:ok, _} = ExPigpio.set_pwm_range(@motor_right_backward, 100)
 
     :ok = ExPigpio.set_mode(@obstacle_sensor_left, :input)
     :ok = ExPigpio.set_mode(@obstacle_sensor_right, :input)
