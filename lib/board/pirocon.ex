@@ -86,22 +86,22 @@ defmodule Robotex.Board.Pirocon do
     {:stop, :normal, state}
   end
   def handle_call(:read_obstacle_sensors, _from, state) do
-    left = ExPigpio.read(@obstacle_sensor_left) == 0
-    right = ExPigpio.read(@obstacle_sensor_right) == 0
+    {:ok, left} = ExPigpio.read(@obstacle_sensor_left)
+    {:ok, right} = ExPigpio.read(@obstacle_sensor_right)
 
-    {:reply, {left, right}, state}
+    {:reply, {left == 0, right == 0}, state}
   end
   def handle_call(:read_line_sensors, _from, state) do
-    left = ExPigpio.read(@line_sensor_left) == 1
-    right = ExPigpio.read(@line_sensor_right) == 1
+    {:ok, left} = ExPigpio.read(@line_sensor_left)
+    {:ok, right} = ExPigpio.read(@line_sensor_right)
 
-    {:reply, {left, right}, state}
+    {:reply, {left == 1, right == 1}, state}
   end
   def handle_call({:set_motors, speed_left_fw, speed_left_bw, speed_right_fw, speed_right_bw}, _form, state) do
-    ExPigpio.set_pwm(@motor_left_forward, speed_left_fw)
-    ExPigpio.set_pwm(@motor_left_backward, speed_left_bw)
-    ExPigpio.set_pwm(@motor_right_forward, speed_right_fw)
-    ExPigpio.set_pwm(@motor_right_backward, speed_right_bw)
+    :ok = ExPigpio.set_pwm(@motor_left_forward, speed_left_fw)
+    :ok = ExPigpio.set_pwm(@motor_left_backward, speed_left_bw)
+    :ok = ExPigpio.set_pwm(@motor_right_forward, speed_right_fw)
+    :ok = ExPigpio.set_pwm(@motor_right_backward, speed_right_bw)
 
     {:reply, :ok, state}
   end
