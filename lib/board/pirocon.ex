@@ -15,6 +15,9 @@ defmodule Robotex.Board.Pirocon do
 
   @sonar 14
 
+  @servo_tilt 24
+  @servo_pan 25
+
   def start_link do
     GenServer.start_link(__MODULE__, [])
   end
@@ -63,6 +66,18 @@ defmodule Robotex.Board.Pirocon do
     GenServer.call(pid, {:set_motors, 0, 0, 0, 0})
   end
 
+  def pan(pid, degrees) when degrees >= -90 and degrees <= 90 do
+    GenServer.call(pid, {:set_servo, @servo_pan, degrees_to_pulsewidth(degrees)})
+  end
+
+  def tilt(pid, degrees) when degrees >= -90 and degrees <= 90 do
+    GenServer.call(pid, {:set_servo, @servo_tilt, degrees_to_pulsewidth(degrees)})
+  end
+
+  defp degrees_to_pulsewidth(degrees) do
+    round(500 + ((90 - degrees) * 2000 / 180))
+  end
+
   def init(_) do
     :ok = ExPigpio.set_mode(@motor_left_forward, :output)
     :ok = ExPigpio.set_mode(@motor_left_backward, :output)
@@ -79,7 +94,10 @@ defmodule Robotex.Board.Pirocon do
     :ok = ExPigpio.set_mode(@line_sensor_left, :input)
     :ok = ExPigpio.set_mode(@line_sensor_right, :input)
 
-    {:ok, :ok}
+    :ok = ExPigpio.set_mode(@servo_tilt, :output)
+    :ok = ExPigpio.set_mode(@servo_pan, :output)
+
+    {:ok, %{timers: %{@servo_tilt => nil, @servo_pan => nil}}}
   end
 
   def handle_call(:stop, _from, state) do
@@ -104,6 +122,16 @@ defmodule Robotex.Board.Pirocon do
     :ok = ExPigpio.set_pwm(@motor_right_backward, speed_right_bw)
 
     {:reply, :ok, state}
+  end
+  def handle_call({:set_servo, servo, pulsewidth}, _form, state = %{timers: timers}) do
+    timer = Map.get(timers, servo)
+
+    :timer.cancel(timer)
+    :ok = ExPigpio.set_servo(servo, pulsewidth)
+    {:ok, timer} = :timer.apply_after(2000, ExPigpio, :set_servo, [servo, 0])
+
+    timers = Map.put(timers, servo, timer)
+    {:reply, :ok, %{state | timers: timers}}
   end
   def handle_call(:get_distance, _from, state) do
     :ok = ExPigpio.set_mode(@sonar, :output)
