@@ -1,7 +1,10 @@
 defmodule Robotex.CLI do
   def main([script_name | _]) do
-    keyboard = Robotex.KeyboardInput.start([keys: ["q"]])
     [{module, _} | _] = Code.load_file(script_name)
+  end
+
+  def run(module) do
+    keyboard = Robotex.KeyboardInput.start([keys: ["q"]])
     script_pid = spawn fn -> apply(module, :run, []) end
 
     receive do

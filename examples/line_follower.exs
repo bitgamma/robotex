@@ -40,16 +40,9 @@ defmodule Robotex.LineFollower do
         :spin
       {:spin, false, false} ->
         Robotex.Board.Pirocon.spin_left(pirocon, @speed)
-        :go
+        :spin
     end
   end
 end
 
-keyboard = Robotex.KeyboardInput.start([keys: ["q"]])
-script_pid = spawn fn -> apply(Robotex.LineFollower, :run, []) end
-
-receive do
-  {:keyboard_event, _} -> send(script_pid, :robotex_exit)
-end
-
-Process.exit(keyboard, :kill)
+Robotex.CLI.run(Robotex.LineFollower)
