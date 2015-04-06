@@ -75,11 +75,11 @@ defmodule Robotex.Board.Pirocon do
   end
 
   def set_notify_on_obstacle_change(pid, trueOrFalse) do
-    GenServer.call(pid, {:set_notification, :notify_on_obstacle, trueOrFalse})
+    GenServer.call(pid, {:set_notification, @obstacle_sensor_left, @obstacle_sensor_right, trueOrFalse})
   end
 
   def set_notify_on_line_change(pid, trueOrFalse) do
-    GenServer.call(pid, {:set_notification, :notify_on_line, trueOrFalse})
+    GenServer.call(pid, {:set_notification, @line_sensor_left, @line_sensor_right, trueOrFalse})
   end
 
   defp degrees_to_pulsewidth(degrees) do
@@ -102,17 +102,12 @@ defmodule Robotex.Board.Pirocon do
     :ok = ExPigpio.set_mode(@line_sensor_left, :input)
     :ok = ExPigpio.set_mode(@line_sensor_right, :input)
 
-    :ok = ExPigpio.add_alert(@obstacle_sensor_left, self)
-    :ok = ExPigpio.add_alert(@obstacle_sensor_right, self)
-    :ok = ExPigpio.add_alert(@line_sensor_left, self)
-    :ok = ExPigpio.add_alert(@line_sensor_right, self)
-
     :ok = ExPigpio.set_mode(@servo_tilt, :output)
     :ok = ExPigpio.set_mode(@servo_pan, :output)
 
     parent = Keyword.fetch!(opts, :parent)
 
-    {:ok, %{parent: parent, timers: %{@servo_tilt => nil, @servo_pan => nil}, notify_on_obstacle: false, notify_on_line: false}}
+    {:ok, %{parent: parent, timers: %{@servo_tilt => nil, @servo_pan => nil}}}
   end
 
   def handle_call(:stop, _from, state) do
@@ -163,26 +158,33 @@ defmodule Robotex.Board.Pirocon do
     distance = calculate_distance_cm(start, stop)
     {:reply, distance, state}
   end
-  def handle_call({:set_notification, type, trueOrFalse}, _from, state) do
-    {:reply, :ok, Map.put(state, type, trueOrFalse)}
+  def handle_call({:set_notification, left, right, true}, _from, state) do
+    :ok = ExPigpio.add_alert(left, self)
+    :ok = ExPigpio.add_alert(right, self)
+    {:reply, :ok, state}
+  end
+  def handle_call({:set_notification, left, right, false}, _from, state) do
+    :ok = ExPigpio.remove_alert(left, self)
+    :ok = ExPigpio.remove_alert(right, self)
+    {:reply, :ok, state}
   end
 
-  def handle_info({:gpio_alert, @obstacle_sensor_left, level, time}, state = %{parent: parent, notify_on_obstacle: true}) do
+  def handle_info({:gpio_alert, @obstacle_sensor_left, level, time}, state = %{parent: parent}) do
     {:ok, right} = ExPigpio.read(@obstacle_sensor_right)
     send(parent, {:robotex_obstacle_change, time, level == 0, right == 0})
     {:noreply, state}
   end
-  def handle_info({:gpio_alert, @obstacle_sensor_right, level, time}, state = %{parent: parent, notify_on_obstacle: true}) do
+  def handle_info({:gpio_alert, @obstacle_sensor_right, level, time}, state = %{parent: parent}) do
     {:ok, left} = ExPigpio.read(@obstacle_sensor_left)
     send(parent, {:robotex_obstacle_change, time, left == 0, level == 0})
     {:noreply, state}
   end
-  def handle_info({:gpio_alert, @line_sensor_left, level, time}, state = %{parent: parent, notify_on_line: true}) do
+  def handle_info({:gpio_alert, @line_sensor_left, level, time}, state = %{parent: parent}) do
     {:ok, right} = ExPigpio.read(@line_sensor_right)
     send(parent, {:robotex_line_change, time, level == 1, right == 1})
     {:noreply, state}
   end
-  def handle_info({:gpio_alert, @line_sensor_right, level, time}, state = %{parent: parent, notify_on_line: true}) do
+  def handle_info({:gpio_alert, @line_sensor_right, level, time}, state = %{parent: parent}) do
     {:ok, left} = ExPigpio.read(@line_sensor_left)
     send(parent, {:robotex_line_change, time, left == 1, level == 1})
     {:noreply, state}
