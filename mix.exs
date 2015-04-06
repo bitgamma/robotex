@@ -29,7 +29,7 @@ defmodule Robotex.Mixfile do
     [{:ex_pigpio, github: "briksoftware/ex_pigpio"}]
   end
 
-  defp escript_config do
+  defp escript do
     [ main_module: Robotex.CLI ]
   end
 end

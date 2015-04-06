@@ -19,7 +19,7 @@ defmodule Robotex.Board.Pirocon do
   @servo_pan 25
 
   def start_link do
-    GenServer.start_link(__MODULE__, [[parent: self]])
+    GenServer.start_link(__MODULE__, [parent: self])
   end
 
   def stop(pid) do
