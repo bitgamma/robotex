@@ -172,7 +172,7 @@ defmodule Robotex.Board.Pirocon do
     :ok = ExPigpio.set_mode(@servo_tilt, :output)
     :ok = ExPigpio.set_mode(@servo_pan, :output)
 
-    notification_pid = Robotex.Board.Pirocon.EventHandler.start_link(opts)
+    {:ok, notification_pid} = Robotex.Board.Pirocon.EventHandler.start_link(opts)
     {:ok, %{timers: %{@servo_tilt => nil, @servo_pan => nil}, notification_handler: notification_pid}}
   end
 
