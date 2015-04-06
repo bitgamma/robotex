@@ -13,8 +13,8 @@ defmodule Robotex.Sensor.Binary do
     GenServer.call(pid, :read)
   end
 
-  def set_notification(pid, trueOrFalse) do
-    GenServer.call(pid, {:set_notification, self, trueOrFalse})
+  def set_notification(pid, target \\ self, trueOrFalse) do
+    GenServer.call(pid, {:set_notification, target, trueOrFalse})
   end
 
   def init(opts) do
