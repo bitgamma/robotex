@@ -3,20 +3,19 @@ defmodule Robotex.LineFollower do
 
   def run() do
     {:ok, pirocon} = Robotex.Board.Pirocon.start_link
-
-    Robotex.Board.Pirocon.set_notify_on_line_change(pirocon, true)
-    do_run(pirocon, :go, Robotex.Board.Pirocon.read_line_sensors(pirocon))
+    do_run(pirocon)
   end
 
-  defp do_run(pirocon, state, {left, right}) do
-    state = react(pirocon, {state, left, right})
+  defp do_run(pirocon) do
+    react(pirocon)
 
     receive do
       :robotex_exit -> cleanup(pirocon)
-      {:robotex_line_change, _, new_left, new_right} -> do_run(pirocon, state, {new_left, new_right})
-    after 1000 ->
-      do_run(pirocon, state, {left, right})
+    after 0 ->
+      :ok
     end
+
+    do_run(pirocon)
   end
 
   defp cleanup(pirocon) do
@@ -24,23 +23,16 @@ defmodule Robotex.LineFollower do
     Robotex.Board.Pirocon.stop(pirocon)
   end
 
-  defp react(pirocon, state) do
-    case state do
-      {_, true, true} ->
+  defp react(pirocon) do
+    case Robotex.Board.Pirocon.read_line_sensors(pirocon) do
+      {true, true} ->
         Robotex.Board.Pirocon.forward(pirocon, @speed)
-        :go
-      {_, true, false} ->
+      {true, false} ->
         Robotex.Board.Pirocon.spin_left(pirocon, @speed)
-        :go
-      {_, false, true} ->
+      {false, true} ->
         Robotex.Board.Pirocon.spin_right(pirocon, @speed)
-        :go
-      {:go, false, false} ->
+      {false, false} ->
         Robotex.Board.Pirocon.spin_right(pirocon, @speed)
-        :spin
-      {:spin, false, false} ->
-        Robotex.Board.Pirocon.spin_left(pirocon, @speed)
-        :spin
     end
   end
 end
