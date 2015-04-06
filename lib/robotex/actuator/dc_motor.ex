@@ -1,6 +1,6 @@
 defmodule Robotex.Actuator.DCMotor do
   use GenServer
-  
+
   defmacro is_speed(speed) do
     quote do
       unquote(speed) >= 0 and unquote(speed) <= 100
@@ -45,7 +45,7 @@ defmodule Robotex.Actuator.DCMotor do
     {:stop, :normal, state}
   end
 
-  def handle_cast({:set_speed, speed_fw, speed_rv}, _from, state) do
+  def handle_cast({:set_speed, speed_fw, speed_rv}, state) do
     set_speed(state, speed_fw, speed_rv)
     {:noreply, state}
   end
