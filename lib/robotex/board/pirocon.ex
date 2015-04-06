@@ -1,66 +1,3 @@
-defmodule Robotex.Board.Pirocon.EventHandler do
-  use GenServer
-
-  @obstacle_sensor_left 4
-  @obstacle_sensor_right 17
-
-  @line_sensor_left 18
-  @line_sensor_right 27
-
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts)
-  end
-
-  def stop(pid) do
-    GenServer.call(pid, :stop)
-  end
-
-  def init(opts) do
-    parent = Keyword.fetch!(opts, :parent)
-    {:ok, %{parent: parent}}
-  end
-
-  def handle_call(:stop, _from, state) do
-    ExPigpio.remove_alert(@obstacle_sensor_left, self)
-    ExPigpio.remove_alert(@obstacle_sensor_right, self)
-    ExPigpio.remove_alert(@line_sensor_left, self)
-    ExPigpio.remove_alert(@line_sensor_right, self)
-
-    {:stop, :normal, state}
-  end
-  def handle_call({:set_notification, left, right, true}, _from, state) do
-    :ok = ExPigpio.add_alert(left, self)
-    :ok = ExPigpio.add_alert(right, self)
-    {:reply, :ok, state}
-  end
-  def handle_call({:set_notification, left, right, false}, _from, state) do
-    :ok = ExPigpio.remove_alert(left, self)
-    :ok = ExPigpio.remove_alert(right, self)
-    {:reply, :ok, state}
-  end
-  def handle_info({:gpio_alert, @obstacle_sensor_left, level, time}, state = %{parent: parent}) do
-    {:ok, right} = ExPigpio.read(@obstacle_sensor_right)
-    send(parent, {:robotex_obstacle_change, time, level == 0, right == 0})
-    {:noreply, state}
-  end
-  def handle_info({:gpio_alert, @obstacle_sensor_right, level, time}, state = %{parent: parent}) do
-    {:ok, left} = ExPigpio.read(@obstacle_sensor_left)
-    send(parent, {:robotex_obstacle_change, time, left == 0, level == 0})
-    {:noreply, state}
-  end
-  def handle_info({:gpio_alert, @line_sensor_left, level, time}, state = %{parent: parent}) do
-    {:ok, right} = ExPigpio.read(@line_sensor_right)
-    send(parent, {:robotex_line_change, time, level == 1, right == 1})
-    {:noreply, state}
-  end
-  def handle_info({:gpio_alert, @line_sensor_right, level, time}, state = %{parent: parent}) do
-    {:ok, left} = ExPigpio.read(@line_sensor_left)
-    send(parent, {:robotex_line_change, time, left == 1, level == 1})
-    {:noreply, state}
-  end
-  def handle_info({:gpio_alert, _gpio, _level, _time}, state), do: {:noreply, state}
-end
-
 defmodule Robotex.Board.Pirocon do
   use GenServer
 
@@ -137,18 +74,6 @@ defmodule Robotex.Board.Pirocon do
     GenServer.call(pid, {:set_servo, @servo_tilt, degrees_to_pulsewidth(degrees)})
   end
 
-  def set_notify_on_obstacle_change(pid, trueOrFalse) do
-    pid
-    |> GenServer.call(:get_notification_pid)
-    |> GenServer.call({:set_notification, @line_sensor_left, @line_sensor_right, trueOrFalse})
-  end
-
-  def set_notify_on_line_change(pid, trueOrFalse) do
-    pid
-    |> GenServer.call(:get_notification_pid)
-    |> GenServer.call({:set_notification, @line_sensor_left, @line_sensor_right, trueOrFalse})
-  end
-
   defp degrees_to_pulsewidth(degrees) do
     round(500 + ((90 - degrees) * 2000 / 180))
   end
@@ -172,12 +97,10 @@ defmodule Robotex.Board.Pirocon do
     :ok = ExPigpio.set_mode(@servo_tilt, :output)
     :ok = ExPigpio.set_mode(@servo_pan, :output)
 
-    {:ok, notification_pid} = Robotex.Board.Pirocon.EventHandler.start_link(opts)
-    {:ok, %{timers: %{@servo_tilt => nil, @servo_pan => nil}, notification_handler: notification_pid}}
+    {:ok, %{timers: %{@servo_tilt => nil, @servo_pan => nil}}}
   end
 
-  def handle_call(:stop, _from, state = %{notification_handler: notification_pid}) do
-    Robotex.Board.Pirocon.EventHandler.stop(notification_pid)
+  def handle_call(:stop, _from, state) do
     {:stop, :normal, state}
   end
   def handle_call(:read_obstacle_sensors, _from, state) do
@@ -224,9 +147,6 @@ defmodule Robotex.Board.Pirocon do
 
     distance = calculate_distance_cm(start, stop)
     {:reply, distance, state}
-  end
-  def handle_call(:get_notification_pid, _from, state = %{notification_handler: notification_pid}) do
-    {:reply, notification_pid, state}
   end
 
   defp receive_sonar_alerts(:stop, start, stop), do: {start, stop}
