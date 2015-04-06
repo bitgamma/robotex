@@ -1,24 +1,25 @@
 defmodule Robotex.LineFollower do
   @speed 100
 
-  def init() do
+  def run() do
     {:ok, pirocon} = Robotex.Board.Pirocon.start_link
 
     Robotex.Board.Pirocon.set_notify_on_line_change(pirocon, true)
-    {pirocon, :go, Robotex.Board.Pirocon.read_line_sensors(pirocon)}
+    do_run(pirocon, :go, Robotex.Board.Pirocon.read_line_sensors(pirocon))
   end
 
-  def run({pirocon, state, {left, right}}) do
+  defp do_run(pirocon, state, {left, right}) do
     state = react(pirocon, {state, left, right})
 
     receive do
-      {:robotex_line_change, _, new_left, new_right} -> run({pirocon, state, {new_left, new_right}})
+      :robotex_exit -> cleanup(pirocon)
+      {:robotex_line_change, _, new_left, new_right} -> do_run(pirocon, state, {new_left, new_right})
     after 1000 ->
-      run({pirocon, state, {left, right}})
+      do_run(pirocon, state, {left, right})
     end
   end
 
-  def cleanup({pirocon, _, _}) do
+  def cleanup(pirocon) do
     Robotex.Board.Pirocon.halt(pirocon)
     Robotex.Board.Pirocon.stop(pirocon)
   end
@@ -43,3 +44,12 @@ defmodule Robotex.LineFollower do
     end
   end
 end
+
+keyboard = Robotex.KeyboardInput.start([keys: ["q"]])
+script_pid = spawn fn -> apply(Robotex.LineFollower, :run, []) end
+
+receive do
+  {:keyboard_event, _} -> send(script_pid, :robotex_exit)
+end
+
+Process.exit(keyboard, :kill)
