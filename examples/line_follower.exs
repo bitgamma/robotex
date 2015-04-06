@@ -19,7 +19,7 @@ defmodule Robotex.LineFollower do
     end
   end
 
-  def cleanup(pirocon) do
+  defp cleanup(pirocon) do
     Robotex.Board.Pirocon.halt(pirocon)
     Robotex.Board.Pirocon.stop(pirocon)
   end
