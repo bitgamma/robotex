@@ -1,4 +1,6 @@
 defmodule Robotex.Actuator.DCMotor do
+  use GenServer
+  
   defmacro is_speed(speed) do
     quote do
       unquote(speed) >= 0 and unquote(speed) <= 100
