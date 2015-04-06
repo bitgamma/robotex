@@ -21,6 +21,8 @@ defmodule Robotex.Sensor.Binary do
     pin = Keyword.fetch!(opts, :pin)
     logic_high = Keyword.get(opts, :logic_high, 1)
 
+    ExPigpio.set_mode(pin, :input)
+
     {:ok, %{pin: pin, logic_high: logic_high, notified_pid: nil}}
   end
 
