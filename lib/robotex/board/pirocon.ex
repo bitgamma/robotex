@@ -15,14 +15,6 @@ defmodule Robotex.Board.Pirocon.EventHandler do
     GenServer.call(pid, :stop)
   end
 
-  def set_notify_on_obstacle_change(pid, trueOrFalse) do
-    GenServer.call(pid, {:set_notification, @obstacle_sensor_left, @obstacle_sensor_right, trueOrFalse})
-  end
-
-  def set_notify_on_line_change(pid, trueOrFalse) do
-    GenServer.call(pid, {:set_notification, @line_sensor_left, @line_sensor_right, trueOrFalse})
-  end
-
   def init(opts) do
     parent = Keyword.fetch!(opts, :parent)
     {:ok, %{parent: parent}}
