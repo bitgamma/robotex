@@ -5,6 +5,7 @@ defmodule Robotex.Mixfile do
     [app: :robotex,
      version: "0.0.1",
      elixir: "~> 1.0",
+     escript: escript,
      deps: deps]
   end
 
@@ -26,5 +27,9 @@ defmodule Robotex.Mixfile do
   # Type `mix help deps` for more examples and options
   defp deps do
     [{:ex_pigpio, github: "briksoftware/ex_pigpio"}]
+  end
+
+  defp escript_config do
+    [ main_module: Robotex.CLI ]
   end
 end
