@@ -50,5 +50,5 @@ end
 {:ok, pirocon} = Robotex.Board.Pirocon.start_link
 keyboard = Robotex.KeyboardInput.start([keys: ["q"]])
 
-Robotex.Board.Pirocon.set_notify_on_line_change(true)
+Robotex.Board.Pirocon.set_notify_on_line_change(pirocon, true)
 Robotex.LineFollower.run(pirocon, keyboard, :go, Robotex.Board.Pirocon.read_line_sensors(pirocon))
