@@ -19,7 +19,7 @@ defmodule Robotex.Board.Pirocon do
   @servo_pan 25
 
   def start_link do
-    GenServer.start_link(__MODULE__, [parent: self])
+    GenServer.start_link(__MODULE__, [])
   end
 
   def stop(pid) do
@@ -78,7 +78,7 @@ defmodule Robotex.Board.Pirocon do
     round(500 + ((90 - degrees) * 2000 / 180))
   end
 
-  def init(opts) do
+  def init(_) do
     :ok = ExPigpio.set_mode(@motor_left_forward, :output)
     :ok = ExPigpio.set_mode(@motor_left_backward, :output)
     :ok = ExPigpio.set_mode(@motor_right_forward, :output)
