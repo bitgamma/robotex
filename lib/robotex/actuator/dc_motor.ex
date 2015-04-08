@@ -23,7 +23,7 @@ defmodule Robotex.Actuator.DCMotor do
     GenServer.cast(pid, {:set_speed, 0, speed})
   end
 
-  def halt(pid, speed) do
+  def halt(pid) do
     GenServer.cast(pid, {:set_speed, 0, 0})
   end
 

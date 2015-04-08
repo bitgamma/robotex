@@ -1,6 +1,7 @@
 defmodule Robotex.CLI do
   def main([script_name | _]) do
     [{module, _} | _] = Code.load_file(script_name)
+    Robotex.CLI.run(module)
   end
 
   def run(module) do
