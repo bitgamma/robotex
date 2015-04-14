@@ -20,10 +20,6 @@ defmodule Robotex.Sensor.Binary do
     GenServer.call(pid, :stop)
   end
 
-  def get_pin(pid) do
-    GenServer.call(pid, :get_pin)
-  end
-
   def read(pid) do
     GenServer.call(pid, :read)
   end
@@ -48,9 +44,6 @@ defmodule Robotex.Sensor.Binary do
 
     {:stop, :normal, state}
   end
-  def handle_call(:get_pin, _from, state = %{pin: pin}) do
-    {:reply, pin, state}
-  end
   def handle_call(:read, _from, state = %{pin: pin, logic_high: logic_high}) do
     {:ok, level} = ExPigpio.read(pin)
 
@@ -72,7 +65,7 @@ defmodule Robotex.Sensor.Binary do
   end
 
   def handle_info({:gpio_alert, pin, level, time}, state = %{pin: pin, notified_pid: notified_pid, logic_high: logic_high}) do
-    send(notified_pid, {:robotex_binary_sensor, pin, time, level == logic_high})
+    send(notified_pid, {:robotex_binary_sensor, self, time, level == logic_high})
 
     {:noreply, state}
   end
