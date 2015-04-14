@@ -63,13 +63,8 @@ defmodule Robotex.Sensor.BinaryArray do
 
   defp notify_listener(state = %{notified_pid: nil}), do: state
   defp notify_listener(state = %{notified_pid: notified_pid, max_update_rate: max_update_rate, send_timer: timer}) do
-    try do
-      :erlang.cancel_timer(timer)
-    rescue
-      error -> :ignore
-    end
-
-    new_timer = Process.send_after(notified_pid, {:robotex_binary_sensor_array, read_values(state)}, max_update_rate)
+    :timer.cancel(timer)
+    new_timer = :timer.send_after(max_update_rate, notified_pid, {:robotex_binary_sensor_array, read_values(state)})
 
     %{state | send_timer: new_timer}
   end
