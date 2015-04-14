@@ -5,8 +5,23 @@ defmodule Robotex.Sensor.Binary do
     GenServer.start_link(__MODULE__, opts)
   end
 
+  def start_link_multiple(opts) do
+    {pins, rest_opts} = Keyword.pop(opts, :pins)
+
+    sensors = for pin <- pins do
+       {:ok, sensor} = start_link(Keyword.put(rest_opts, :pin, pin))
+       sensor
+    end
+
+    {:ok, sensors}
+  end
+
   def stop(pid) do
     GenServer.call(pid, :stop)
+  end
+
+  def get_pin(pid) do
+    GenServer.call(pid, :get_pin)
   end
 
   def read(pid) do
@@ -32,6 +47,9 @@ defmodule Robotex.Sensor.Binary do
     end
 
     {:stop, :normal, state}
+  end
+  def handle_call(:get_pin, _from, state = %{pin: pin}) do
+    {:reply, pin, state}
   end
   def handle_call(:read, _from, state = %{pin: pin, logic_high: logic_high}) do
     {:ok, level} = ExPigpio.read(pin)
