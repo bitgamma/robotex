@@ -37,7 +37,7 @@ defmodule Robotex.Sensor.BinaryArray do
     for {sensor, _} <- sensors, do: Robotex.Sensor.Binary.stop(sensor)
     {:stop, :normal, state}
   end
-  def handle_call({:read, notified_pid}, _from, state) do
+  def handle_call(:read, _from, state) do
     {:reply, read_values(state), state}
   end
   def handle_call({:set_notification, notified_pid}, _from, state) do
@@ -65,7 +65,7 @@ defmodule Robotex.Sensor.BinaryArray do
   defp notify_listener(state = %{notified_pid: notified_pid, max_update_rate: max_update_rate, send_timer: timer}) do
     :erlang.cancel_timer(timer)
     new_timer = Process.send_after(notified_pid, {:robotex_binary_sensor_array, read_values(state)}, max_update_rate)
-    
+
     %{state | send_timer: new_timer}
   end
 
