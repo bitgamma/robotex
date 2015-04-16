@@ -1,17 +1,30 @@
 defmodule Robotex.CLI do
-  def main([script_name | _]) do
-    [{module, _} | _] = Code.load_file(script_name)
-    Robotex.CLI.run(module)
+  def main(argv) do
+    {opts, _, _} = OptionParser.parse(argv, strict: [robot: :string, algorithm: :string], aliases: [r: :robot, a: :algorithm])
+
+    robot_spec = Keyword.fetch!(opts, :robot)
+    algo_spec = Keyword.fetch!(opts, :algorithm)
+
+    robot = load_module(robot_spec, "Robotex.Robot")
+    algorithm = load_module(algo_spec, "Robotex.Algorithm")
+
+    Robotex.run(robot, algorithm)
   end
 
-  def run(module) do
-    keyboard = Robotex.KeyboardInput.start([keys: ["q"]])
-    script_pid = spawn fn -> apply(module, :run, []) end
+  defp load_module(spec, module_prefix), do:  do_load_module(File.regular?(spec), spec, module_prefix)
 
-    receive do
-      {:keyboard_event, _} -> send(script_pid, :robotex_exit)
+  defp do_load_module(true, path, _module_prefix) do
+    [{module, _} | _] = Code.load_file(path)
+    module
+  end
+  defp do_load_module(false, module_name, module_prefix) do
+    module = String.to_atom("Elixir.#{module_name}")
+
+    if Code.ensure_loaded?(module) do
+      module
+    else
+      # fail if the module does not exist, but the error message will not be clear
+      String.to_existing_atom("Elixir.#{module_prefix}.#{module_name}")
     end
-
-    Process.exit(keyboard, :kill)
   end
 end
