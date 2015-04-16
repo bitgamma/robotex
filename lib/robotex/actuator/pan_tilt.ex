@@ -7,6 +7,17 @@ defmodule Robotex.Actuator.PanTilt do
     end
   end
 
+  def start_link_servos(pan_opts, tilt_opts) do
+    {:ok, pan} = Robotex.Actuator.Servo.start_link(pan_opts)
+    {:ok, tilt} = Robotex.Actuator.Servo.start_link(tilt_opts)
+    %Robotex.Actuator.PanTilt{pan: pan, tilt: tilt}
+  end
+
+  def stop_servos(%Robotex.Actuator.PanTilt{pan: pan, tilt: tilt}) do
+    Robotex.Actuator.PanTilt.stop(pan)
+    Robotex.Actuator.PanTilt.stop(tilt)
+  end
+
   def pan(%Robotex.Actuator.PanTilt{pan: pan}, degrees) when not is_nil(pan) do
     Robotex.Actuator.Servo.rotate(pan, degrees)
   end
@@ -22,6 +33,6 @@ defmodule Robotex.Actuator.PanTilt do
 
   def center(%Robotex.Actuator.PanTilt{pan: pan, tilt: tilt}) when is_valid(pan, tilt) do
     Robotex.Actuator.Servo.rotate(pan, 0)
-    Robotex.Actuator.Servo.rotate(tilt, 0)    
+    Robotex.Actuator.Servo.rotate(tilt, 0)
   end
 end

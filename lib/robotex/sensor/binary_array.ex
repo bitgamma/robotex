@@ -1,7 +1,7 @@
 defmodule Robotex.Sensor.BinaryArray do
   use GenServer
 
-  def start_link_with_pins(opts) do
+  def start_link_sensors(opts) do
     {:ok, sensors} = Robotex.Sensor.Binary.start_link_multiple(opts)
     Robotex.Sensor.BinaryArray.start_link(sensors: sensors)
   end

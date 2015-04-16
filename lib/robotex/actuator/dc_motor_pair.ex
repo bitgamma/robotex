@@ -7,6 +7,17 @@ defmodule Robotex.Actuator.DCMotorPair do
     end
   end
 
+  def start_link_motors(left_opts, right_opts) do
+    {:ok, left} = Robotex.Actuator.DCMotor.start_link(left_opts)
+    {:ok, right} = Robotex.Actuator.DCMotor.start_link(right_opts)
+    %Robotex.Actuator.DCMotorPair{left: left, right: right}
+  end
+
+  def stop_motors(%Robotex.Actuator.DCMotorPair{left: left, right: right}) do
+    Robotex.Actuator.DCMotor.stop(left)
+    Robotex.Actuator.DCMotor.stop(right)
+  end
+
   def forward(%Robotex.Actuator.DCMotorPair{left: left, right: right}, speed) when is_valid(left, right) do
     Robotex.Actuator.DCMotor.forward(left, speed)
     Robotex.Actuator.DCMotor.forward(right, speed)
