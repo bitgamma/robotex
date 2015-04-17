@@ -12,7 +12,7 @@ defmodule Robotex.Supervisor do
   def init([robot, algorithm, required_features]) do
     children = [
       supervisor(Robotex.Robot, [robot, required_features]),
-      worker(Robotex.Algorithm, [algorithm])
+      worker(algorithm, [])
     ]
 
     supervise(children, strategy: :one_for_one)
