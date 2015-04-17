@@ -14,7 +14,7 @@ defmodule Robotex.Robot do
   defp robot_specs(robot, features) do
     for feature <- features do
       {module, args} = robot.spec(feature)
-      worker(module, [args] ++ [[name: feature]])
+      worker(module, args ++ [[name: feature]])
     end
   end
 end
