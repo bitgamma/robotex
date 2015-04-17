@@ -1,3 +1,3 @@
 %{"elixir_ale": {:hex, :elixir_ale, "0.3.0"},
-  "ex_pigpio": {:git, "git://github.com/briksoftware/ex_pigpio.git", "caa90d6d168834bd8d961ba295a349f2c94c53e3", []},
-  "pigpio": {:git, "git://github.com/joan2937/pigpio.git", "232136f4fa1c113c0ecca46bc0799b6e49bb0ec6", []}}
+  "ex_pigpio": {:git, "git://github.com/briksoftware/ex_pigpio.git", "cd41813f426ec9f29e0a4750d76a84473f9b049a", []},
+  "pigpio": {:git, "git://github.com/briksoftware/pigpio.git", "9e72562f27d7697831ff90c947f966289eceb202", []}}
