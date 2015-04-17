@@ -24,7 +24,7 @@ defmodule Robotex.Actuator.DCMotor do
   end
 
   def set_speed(pid, fw_speed, rv_speed) when is_speed(fw_speed) and is_speed(rv_speed) do
-    GenServer.cast(pid, {:set_speed, fw_speed, rv_speed})  
+    GenServer.cast(pid, {:set_speed, fw_speed, rv_speed})
   end
 
   def halt(pid) do
@@ -49,16 +49,16 @@ defmodule Robotex.Actuator.DCMotor do
   end
 
   def handle_cast({:set_speed, speed_fw, speed_rv}, state) do
-    set_speed(state, speed_fw, speed_rv)
+    do_set_speed(state, speed_fw, speed_rv)
     {:noreply, state}
   end
 
   def terminate(_reason, state) do
-    set_speed(state, 0, 0)
+    do_set_speed(state, 0, 0)
     :ok
   end
 
-  defp set_speed(%{forward_pin: forward_pin, reverse_pin: reverse_pin}, speed_fw, speed_rv) do
+  defp do_set_speed(%{forward_pin: forward_pin, reverse_pin: reverse_pin}, speed_fw, speed_rv) do
     ExPigpio.set_pwm(forward_pin, speed_fw)
     ExPigpio.set_pwm(reverse_pin, speed_rv)
   end
