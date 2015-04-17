@@ -13,12 +13,12 @@ defmodule Robotex.Sensor.BinaryArray do
     GenServer.call(pid, :read)
   end
 
-  def set_notification(pid, target \\ self, trueOrFalse, debounce_period \\ 5)
-  def set_notification(pid, target, true, debounce_period) do
-    GenServer.call(pid, {:set_notification, target, debounce_period})
+  def set_notification(pid, target \\ self, trueOrFalse)
+  def set_notification(pid, target, true) do
+    GenServer.call(pid, {:set_notification, target})
   end
-  def set_notification(pid, _target, false, _debounce_period) do
-    GenServer.call(pid, {:set_notification, nil, 0})
+  def set_notification(pid, _target, false) do
+    GenServer.call(pid, {:set_notification, nil})
   end
 
   def init(opts) do
@@ -29,7 +29,7 @@ defmodule Robotex.Sensor.BinaryArray do
       {sensor, Robotex.Sensor.Binary.read(sensor)}
     end
 
-    {:ok, %{sensors: sensors, debounce_period: 0, notified_pid: nil, send_timer: nil}}
+    {:ok, %{sensors: sensors, notified_pid: nil}}
   end
 
   def handle_call(:stop, _from, state) do
@@ -38,8 +38,8 @@ defmodule Robotex.Sensor.BinaryArray do
   def handle_call(:read, _from, state) do
     {:reply, read_values(state), state}
   end
-  def handle_call({:set_notification, notified_pid, debounce_period}, _from, state) do
-    {:reply, :ok, %{state | notified_pid: notified_pid, debounce_period: debounce_period}}
+  def handle_call({:set_notification, notified_pid}, _from, state) do
+    {:reply, :ok, %{state | notified_pid: notified_pid}}
   end
 
   def handle_info({:robotex_binary_sensor, sensor, _time, value}, state) do
@@ -60,11 +60,9 @@ defmodule Robotex.Sensor.BinaryArray do
   end
 
   defp notify_listener(state = %{notified_pid: nil}), do: state
-  defp notify_listener(state = %{notified_pid: notified_pid, debounce_period: debounce_period, send_timer: timer}) do
-    :timer.cancel(timer)
-    new_timer = :timer.send_after(debounce_period, notified_pid, {:robotex_binary_sensor_array, read_values(state)})
-
-    %{state | send_timer: new_timer}
+  defp notify_listener(state = %{notified_pid: notified_pid}) do
+    send(notified_pid, {:robotex_binary_sensor_array, read_values(state)})
+    state
   end
 
   defp read_values(%{sensors: sensors}) do
