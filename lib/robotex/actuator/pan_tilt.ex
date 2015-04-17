@@ -1,38 +1,48 @@
 defmodule Robotex.Actuator.PanTilt do
-  defstruct [pan: nil, tilt: nil]
+  use GenServer
 
-  defmacro is_valid(pan, tilt) do
-    quote do
-      not (is_nil(unquote(pan)) or is_nil(unquote(tilt)))
-    end
+  def start_link(pan_opts, tilt_opts, opts \\ []) do
+    GenServer.start_link(__MODULE__, [pan_opts, tilt_opts], opts)
   end
 
-  def start_link_servos(pan_opts, tilt_opts) do
+  def stop(pid) do
+    GenServer.call(pid, :stop)
+  end
+
+  def pan(pid, degrees) do
+    GenServer.cast(pid, {:pan, degrees})
+  end
+
+  def tilt(pid, degrees) do
+    GenServer.cast(pid, {:tilt, degrees})
+  end
+
+  def pan_and_tilt(pid, pan_degrees, tilt_degrees) do
+    GenServer.cast(pid, {:pan_and_tilt, pan_degrees, tilt_degrees})
+  end
+
+  def center(pid) do
+    GenServer.cast(pid, {:pan_and_tilt, 0, 0})
+  end
+
+  def init([pan_opts, tilt_opts]) do
     {:ok, pan} = Robotex.Actuator.Servo.start_link(pan_opts)
     {:ok, tilt} = Robotex.Actuator.Servo.start_link(tilt_opts)
-    {:ok, %Robotex.Actuator.PanTilt{pan: pan, tilt: tilt}}
+    {:ok, %{pan: pan, tilt: tilt}}
   end
 
-  def stop_servos(%Robotex.Actuator.PanTilt{pan: pan, tilt: tilt}) do
-    Robotex.Actuator.PanTilt.stop(pan)
-    Robotex.Actuator.PanTilt.stop(tilt)
+  def handle_call(:stop, _from, state) do
+    {:stop, :normal, state}
   end
 
-  def pan(%Robotex.Actuator.PanTilt{pan: pan}, degrees) when not is_nil(pan) do
-    Robotex.Actuator.Servo.rotate(pan, degrees)
+  def handle_cast({:pan, pdeg}, %{pan: pan}) do
+    Robotex.Actuator.Servo.rotate(pan, pdeg)
   end
-
-  def tilt(%Robotex.Actuator.PanTilt{tilt: tilt}, degrees) when not is_nil(tilt) do
-    Robotex.Actuator.Servo.rotate(tilt, degrees)
+  def handle_cast({:tilt, tdeg}, %{tilt: tilt}) do
+    Robotex.Actuator.Servo.rotate(tilt, tdeg)
   end
-
-  def pan_and_tilt(%Robotex.Actuator.PanTilt{pan: pan, tilt: tilt}, pan_degrees, tilt_degrees) when is_valid(pan, tilt) do
-    Robotex.Actuator.Servo.rotate(pan, pan_degrees)
-    Robotex.Actuator.Servo.rotate(tilt, tilt_degrees)
-  end
-
-  def center(%Robotex.Actuator.PanTilt{pan: pan, tilt: tilt}) when is_valid(pan, tilt) do
-    Robotex.Actuator.Servo.rotate(pan, 0)
-    Robotex.Actuator.Servo.rotate(tilt, 0)
+  def handle_cast({:pan_and_tilt, pdeg, tdeg}, %{pan: pan, tilt: tilt}) do
+    Robotex.Actuator.Servo.rotate(pan, pdeg)
+    Robotex.Actuator.Servo.rotate(tilt, tdeg)
   end
 end
