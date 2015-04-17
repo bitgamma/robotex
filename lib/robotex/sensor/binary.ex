@@ -33,10 +33,11 @@ defmodule Robotex.Sensor.Binary do
 
     pin = Keyword.fetch!(opts, :pin)
     logic_high = Keyword.get(opts, :logic_high, 1)
+    debounce_period = Keyword.get(opts, :debounce_period, 0)
 
     ExPigpio.set_mode(pin, :input)
 
-    {:ok, %{pin: pin, logic_high: logic_high, notified_pid: nil}}
+    {:ok, %{pin: pin, logic_high: logic_high, debounce_period: debounce_period, notified_pid: nil, send_timer: nil}}
   end
 
   def handle_call(:stop, _from, state) do
@@ -62,10 +63,11 @@ defmodule Robotex.Sensor.Binary do
     {:reply, :ok, %{state | notified_pid: nil}}
   end
 
-  def handle_info({:gpio_alert, pin, level, time}, state = %{pin: pin, notified_pid: notified_pid, logic_high: logic_high}) do
-    send(notified_pid, {:robotex_binary_sensor, self, time, level == logic_high})
+  def handle_info({:gpio_alert, pin, level, time}, state = %{pin: pin, notified_pid: notified_pid, logic_high: logic_high, debounce_period: debounce_period, send_timer: timer}) do
+    :timer.cancel(timer)
+    timer = :timer.send_after(debounce_period, notified_pid, {:robotex_binary_sensor, self, time, level == logic_high})
 
-    {:noreply, state}
+    {:noreply, %{state | send_timer: timer}}
   end
 
   def terminate(_reason, %{notified_pid: nil}), do: :ok
