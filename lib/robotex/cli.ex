@@ -8,7 +8,12 @@ defmodule Robotex.CLI do
     robot = load_module(robot_spec, "Robotex.Robot")
     algorithm = load_module(algo_spec, "Robotex.Algorithm")
 
-    Robotex.Supervisor.start_link(robot, algorithm)
+    {:ok, supervisor} = Robotex.Supervisor.start_link(robot, algorithm)
+
+    # change this of course
+    :timer.sleep(60_000)
+
+    Process.exit(supervisor, :shutdown)
   end
 
   defp load_module(spec, module_prefix), do:  do_load_module(File.regular?(spec), spec, module_prefix)
