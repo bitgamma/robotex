@@ -13,7 +13,7 @@ defmodule Robotex do
       {:keyboard_event, _} -> send(algorithm_pid, :robotex_stop)
     end
 
-    stop_robot(robot, required_features)
+    stop_robot(robot, robot_map)
 
     Process.exit(keyboard, :kill)
   end
@@ -22,8 +22,8 @@ defmodule Robotex do
     for feature <- features, into: %{}, do: {feature, apply(robot, :init, [feature])}
   end
 
-  defp stop_robot(robot, features) do
-    Enum.each(features, fn(f) -> apply(robot, :stop, [f]) end)
+  defp stop_robot(robot, robot_map) do
+    Enum.each(robot_map, fn(k, v) -> apply(robot, :stop, [k, v]) end)
   end
 
   defp assert_requirements(required_features, actual_features) do
