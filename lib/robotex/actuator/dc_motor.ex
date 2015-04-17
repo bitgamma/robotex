@@ -32,6 +32,8 @@ defmodule Robotex.Actuator.DCMotor do
   end
 
   def init(opts) do
+    Process.flag(:trap_exit, true)
+    
     forward_pin = Keyword.fetch!(opts, :forward_pin)
     reverse_pin = Keyword.fetch!(opts, :reverse_pin)
 

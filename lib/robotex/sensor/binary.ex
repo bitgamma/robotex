@@ -29,6 +29,8 @@ defmodule Robotex.Sensor.Binary do
   end
 
   def init(opts) do
+    Process.flag(:trap_exit, true)
+
     pin = Keyword.fetch!(opts, :pin)
     logic_high = Keyword.get(opts, :logic_high, 1)
 

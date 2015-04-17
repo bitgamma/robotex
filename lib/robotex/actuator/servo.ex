@@ -14,8 +14,9 @@ defmodule Robotex.Actuator.Servo do
   end
 
   def init(opts) do
-    pin = Keyword.fetch!(opts, :pin)
+    Process.flag(:trap_exit, true)
 
+    pin = Keyword.fetch!(opts, :pin)
     ExPigpio.set_mode(pin, :output)
 
     {:ok, %{pin: pin, timer: nil}}
