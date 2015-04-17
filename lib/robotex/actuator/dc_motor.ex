@@ -7,8 +7,8 @@ defmodule Robotex.Actuator.DCMotor do
     end
   end
 
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts)
+  def start_link(motor_opts, opts \\ []) do
+    GenServer.start_link(__MODULE__, motor_opts, opts)
   end
 
   def stop(pid) do
@@ -41,13 +41,17 @@ defmodule Robotex.Actuator.DCMotor do
   end
 
   def handle_call(:stop, _from, state) do
-    set_speed(state, 0, 0)
     {:stop, :normal, state}
   end
 
   def handle_cast({:set_speed, speed_fw, speed_rv}, state) do
     set_speed(state, speed_fw, speed_rv)
     {:noreply, state}
+  end
+
+  def terminate(_reason, state) do
+    set_speed(state, 0, 0)
+    :ok
   end
 
   defp set_speed(%{forward_pin: forward_pin, reverse_pin: reverse_pin}, speed_fw, speed_rv) do

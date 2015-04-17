@@ -1,15 +1,15 @@
 defmodule Robotex.Sensor.Binary do
   use GenServer
 
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts)
+  def start_link(sensor_opts, opts \\ []) do
+    GenServer.start_link(__MODULE__, sensor_opts, opts)
   end
 
-  def start_link_multiple(opts) do
-    {pins, rest_opts} = Keyword.pop(opts, :pins)
+  def start_link_multiple(sensor_opts, opts \\ []) do
+    {pins, rest_opts} = Keyword.pop(sensor_opts, :pins)
 
     sensors = for pin <- pins do
-       {:ok, sensor} = start_link(Keyword.put(rest_opts, :pin, pin))
+       {:ok, sensor} = start_link(Keyword.put(rest_opts, :pin, pin), opts)
        sensor
     end
 
@@ -37,11 +37,7 @@ defmodule Robotex.Sensor.Binary do
     {:ok, %{pin: pin, logic_high: logic_high, notified_pid: nil}}
   end
 
-  def handle_call(:stop, _from, state = %{pin: pin, notified_pid: notified_pid}) do
-    if notified_pid != nil do
-      ExPigpio.remove_alert(pin, self)
-    end
-
+  def handle_call(:stop, _from, state) do
     {:stop, :normal, state}
   end
   def handle_call(:read, _from, state = %{pin: pin, logic_high: logic_high}) do
@@ -68,5 +64,11 @@ defmodule Robotex.Sensor.Binary do
     send(notified_pid, {:robotex_binary_sensor, self, time, level == logic_high})
 
     {:noreply, state}
+  end
+
+  def terminate(_reason, %{notified_pid: nil}), do: :ok
+  def terminate(_reason, %{pin: pin}) do
+    ExPigpio.remove_alert(pin, self)
+    :ok
   end
 end

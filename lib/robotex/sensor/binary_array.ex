@@ -1,13 +1,8 @@
 defmodule Robotex.Sensor.BinaryArray do
   use GenServer
 
-  def start_link_sensors(opts) do
-    {:ok, sensors} = Robotex.Sensor.Binary.start_link_multiple(opts)
-    Robotex.Sensor.BinaryArray.start_link(sensors: sensors)
-  end
-
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts)
+  def start_link(sensor_opts, opts \\ []) do
+    GenServer.start_link(__MODULE__, sensor_opts, opts)
   end
 
   def stop(pid) do
@@ -27,7 +22,7 @@ defmodule Robotex.Sensor.BinaryArray do
   end
 
   def init(opts) do
-    sensor_list = Keyword.fetch!(opts, :sensors)
+    {:ok, sensor_list} = Robotex.Sensor.Binary.start_link_multiple(opts)
 
     sensors = for sensor <- sensor_list do
       Robotex.Sensor.Binary.set_notification(sensor, true)
@@ -37,8 +32,7 @@ defmodule Robotex.Sensor.BinaryArray do
     {:ok, %{sensors: sensors, debounce_period: 0, notified_pid: nil, send_timer: nil}}
   end
 
-  def handle_call(:stop, _from, state = %{sensors: sensors}) do
-    for {sensor, _} <- sensors, do: Robotex.Sensor.Binary.stop(sensor)
+  def handle_call(:stop, _from, state) do
     {:stop, :normal, state}
   end
   def handle_call(:read, _from, state) do

@@ -1,8 +1,8 @@
 defmodule Robotex.Sensor.Sonar do
   use GenServer
 
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts)
+  def start_link(sonar_opts, opts \\ []) do
+    GenServer.start_link(__MODULE__, sonar_opts, opts)
   end
 
   def stop(pid) do

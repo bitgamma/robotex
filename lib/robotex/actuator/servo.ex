@@ -1,8 +1,8 @@
 defmodule Robotex.Actuator.Servo do
   use GenServer
 
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts)
+  def start_link(servo_opts, opts \\ []) do
+    GenServer.start_link(__MODULE__, servo_opts, opts)
   end
 
   def stop(pid) do
@@ -21,10 +21,7 @@ defmodule Robotex.Actuator.Servo do
     {:ok, %{pin: pin, timer: nil}}
   end
 
-  def handle_call(:stop, _from, state = %{pin: pin, timer: timer}) do
-    :timer.cancel(timer)
-    ExPigpio.set_servo(pin, 0)
-
+  def handle_call(:stop, _from, state) do
     {:stop, :normal, state}
   end
 
@@ -34,6 +31,12 @@ defmodule Robotex.Actuator.Servo do
     {:ok, timer} = :timer.apply_after(2000, ExPigpio, :set_servo, [pin, 0])
 
     {:noreply, %{state | timer: timer}}
+  end
+
+  def terminate(_reason, %{pin: pin, timer: timer}) do
+    :timer.cancel(timer)
+    ExPigpio.set_servo(pin, 0)
+    :ok
   end
 
   defp degrees_to_pulsewidth(deg) do
