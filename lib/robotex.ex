@@ -26,7 +26,7 @@ defmodule Robotex do
   end
 
   defp stop_robot(robot, robot_map) do
-    Enum.each(robot_map, fn(k, v) -> apply(robot, :stop, [k, v]) end)
+    Enum.each(robot_map, fn({k, v}) -> apply(robot, :stop, [k, v]) end)
   end
 
   defp assert_requirements(required_features, actual_features) do
