@@ -33,7 +33,7 @@ defmodule Robotex.Actuator.DCMotorPair do
     GenServer.cast(pid, {:set_speed, speed_left, 0, speed_right, 0})
   end
 
-  def turn_backward(pid, speed_left, speed_right) do
+  def turn_reverse(pid, speed_left, speed_right) do
     GenServer.cast(pid, {:set_speed, 0, speed_left, 0, speed_right})
   end
 
