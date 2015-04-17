@@ -35,14 +35,17 @@ defmodule Robotex.Actuator.PanTilt do
     {:stop, :normal, state}
   end
 
-  def handle_cast({:pan, pdeg}, %{pan: pan}) do
+  def handle_cast({:pan, pdeg}, state = %{pan: pan}) do
     Robotex.Actuator.Servo.rotate(pan, pdeg)
+    {:noreply, state}
   end
-  def handle_cast({:tilt, tdeg}, %{tilt: tilt}) do
+  def handle_cast({:tilt, tdeg}, state = %{tilt: tilt}) do
     Robotex.Actuator.Servo.rotate(tilt, tdeg)
+    {:noreply, state}
   end
-  def handle_cast({:pan_and_tilt, pdeg, tdeg}, %{pan: pan, tilt: tilt}) do
+  def handle_cast({:pan_and_tilt, pdeg, tdeg}, state = %{pan: pan, tilt: tilt}) do
     Robotex.Actuator.Servo.rotate(pan, pdeg)
     Robotex.Actuator.Servo.rotate(tilt, tdeg)
+    {:noreply, state}
   end
 end

@@ -47,8 +47,9 @@ defmodule Robotex.Actuator.DCMotorPair do
     {:stop, :normal, state}
   end
 
-  def handle_cast({:set_speed, left_fw, left_rv, right_fw, right_rv}, %{left: left, right: right}) do
+  def handle_cast({:set_speed, left_fw, left_rv, right_fw, right_rv}, state = %{left: left, right: right}) do
     Robotex.Actuator.DCMotor.set_speed(left, left_fw, left_rv)
     Robotex.Actuator.DCMotor.set_speed(right, right_fw, right_rv)
+    {:noreply, state}
   end
 end
