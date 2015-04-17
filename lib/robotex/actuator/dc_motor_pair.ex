@@ -1,55 +1,54 @@
 defmodule Robotex.Actuator.DCMotorPair do
-  defstruct [left: nil, right: nil]
+  use GenServer
 
-  defmacro is_valid(left, right) do
-    quote do
-      not (is_nil(unquote(left)) or is_nil(unquote(right)))
-    end
+  def start_link(left_opts, right_opts, opts \\ []) do
+    GenServer.start_link(__MODULE__, [left_opts, right_opts], opts)
   end
 
-  def start_link_motors(left_opts, right_opts) do
+  def stop(pid) do
+    GenServer.call(pid, :stop)
+  end
+
+  def forward(pid, speed) do
+    GenServer.cast(pid, {:set_speed, speed, 0, speed, 0})
+  end
+
+  def reverse(pid, speed) do
+    GenServer.cast(pid, {:set_speed, 0, speed, 0, speed})
+  end
+
+  def halt(pid) do
+    GenServer.cast(pid, {:set_speed, 0, 0, 0, 0})
+  end
+
+  def spin_left(pid, speed) do
+    GenServer.cast(pid, {:set_speed, 0, speed, speed, 0})
+  end
+
+  def spin_right(pid, speed) do
+    GenServer.cast(pid, {:set_speed, speed, 0, 0, speed})
+  end
+
+  def turn_forward(pid, speed_left, speed_right) do
+    GenServer.cast(pid, {:set_speed, speed_left, 0, speed_right, 0})
+  end
+
+  def turn_backward(pid, speed_left, speed_right) do
+    GenServer.cast(pid, {:set_speed, 0, speed_left, 0, speed_right})
+  end
+
+  def init([left_opts, right_opts]) do
     {:ok, left} = Robotex.Actuator.DCMotor.start_link(left_opts)
     {:ok, right} = Robotex.Actuator.DCMotor.start_link(right_opts)
-    {:ok, %Robotex.Actuator.DCMotorPair{left: left, right: right}}
+    {:ok, %{left: left, right: right}}
   end
 
-  def stop_motors(%Robotex.Actuator.DCMotorPair{left: left, right: right}) do
-    Robotex.Actuator.DCMotor.stop(left)
-    Robotex.Actuator.DCMotor.stop(right)
+  def handle_call(:stop, _from, state) do
+    {:stop, :normal, state}
   end
 
-  def forward(%Robotex.Actuator.DCMotorPair{left: left, right: right}, speed) when is_valid(left, right) do
-    Robotex.Actuator.DCMotor.forward(left, speed)
-    Robotex.Actuator.DCMotor.forward(right, speed)
-  end
-
-  def reverse(%Robotex.Actuator.DCMotorPair{left: left, right: right}, speed) when is_valid(left, right) do
-    Robotex.Actuator.DCMotor.reverse(left, speed)
-    Robotex.Actuator.DCMotor.reverse(right, speed)
-  end
-
-  def halt(%Robotex.Actuator.DCMotorPair{left: left, right: right}) when is_valid(left, right) do
-    Robotex.Actuator.DCMotor.halt(left)
-    Robotex.Actuator.DCMotor.halt(right)
-  end
-
-  def spin_left(%Robotex.Actuator.DCMotorPair{left: left, right: right}, speed) when is_valid(left, right) do
-    Robotex.Actuator.DCMotor.reverse(left, speed)
-    Robotex.Actuator.DCMotor.forward(right, speed)
-  end
-
-  def spin_right(%Robotex.Actuator.DCMotorPair{left: left, right: right}, speed) when is_valid(left, right) do
-    Robotex.Actuator.DCMotor.forward(left, speed)
-    Robotex.Actuator.DCMotor.reverse(right, speed)
-  end
-
-  def turn_forward(%Robotex.Actuator.DCMotorPair{left: left, right: right}, speed_left, speed_right) when is_valid(left, right) do
-    Robotex.Actuator.DCMotor.forward(left, speed_left)
-    Robotex.Actuator.DCMotor.forward(right, speed_right)
-  end
-
-  def turn_backward(%Robotex.Actuator.DCMotorPair{left: left, right: right}, speed_left, speed_right) when is_valid(left, right) do
-    Robotex.Actuator.DCMotor.reverse(left, speed_left)
-    Robotex.Actuator.DCMotor.reverse(right, speed_right)
+  def handle_cast({:set_speed, left_fw, left_rv, right_fw, right_rv}, %{left: left, right: right}) do
+    Robotex.Actuator.DCMotor.set_speed(left, left_fw, left_rv)
+    Robotex.Actuator.DCMotor.set_speed(right, right_fw, right_rv)
   end
 end
