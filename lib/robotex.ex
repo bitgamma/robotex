@@ -19,7 +19,10 @@ defmodule Robotex do
   end
 
   defp init_robot(robot, features) do
-    for feature <- features, into: %{}, do: {feature, apply(robot, :init, [feature])}
+    for feature <- features, into: %{}, do
+      {:ok, initialized_feature} = apply(robot, :init, [feature])
+      {feature, initialized_feature}
+    end
   end
 
   defp stop_robot(robot, robot_map) do
