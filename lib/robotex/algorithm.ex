@@ -4,6 +4,6 @@ defmodule Robotex.Algorithm do
       {feature, Process.whereis(feature)}
     end
 
-    spawn_link(algorithm, :run, [parts])
+    {:ok, spawn_link(algorithm, :run, [parts])}
   end
 end
