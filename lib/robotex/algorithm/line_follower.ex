@@ -25,9 +25,9 @@ defmodule Robotex.Algorithm.LineFollower do
     {:stop, :normal, state}
   end
 
-  def handle_info({:robotex_binary_sensor_array, sensor_values}, _from, state) do
+  def handle_info({:robotex_binary_sensor_array, sensors_value}, _from, _state) do
     react(sensors_value)
-    {:noreply, sensor_values}
+    {:noreply, sensors_value}
   end
 
   defp react(sensors_value) do
