@@ -63,10 +63,13 @@ defmodule Robotex.Sensor.Binary do
     {:reply, :ok, %{state | notified_pid: nil}}
   end
 
+  def handle_info({:gpio_alert, pin, level, time}, state = %{pin: pin, notified_pid: notified_pid, logic_high: logic_high, debounce_period: 0}) do
+    send(notified_pid, {:robotex_binary_sensor, self, time, level == logic_high})
+    {:noreply, state}
+  end
   def handle_info({:gpio_alert, pin, level, time}, state = %{pin: pin, notified_pid: notified_pid, logic_high: logic_high, debounce_period: debounce_period, send_timer: timer}) do
     :timer.cancel(timer)
     timer = :timer.send_after(debounce_period, notified_pid, {:robotex_binary_sensor, self, time, level == logic_high})
-
     {:noreply, %{state | send_timer: timer}}
   end
 
