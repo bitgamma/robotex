@@ -15,27 +15,39 @@ defmodule Robotex.Algorithm.LineFollower do
 
   def init(_) do
     sensor_values = Robotex.Sensor.BinaryArray.read(:line_sensors)
-    react(sensor_values)
+    timeout = react(sensor_values)
 
     Robotex.Sensor.BinaryArray.set_notification(:line_sensors, true)
-    {:ok, sensor_values}
+    {:ok, :ok, timeout}
   end
 
   def handle_call(:stop, _from, state) do
     {:stop, :normal, state}
   end
 
-  def handle_info({:robotex_binary_sensor_array, sensors_value}, _state) do
-    react(sensors_value)
-    {:noreply, sensors_value}
+  def handle_info({:robotex_binary_sensor_array, sensors_value}, :ok) do
+    timeout = react(sensor_values)
+    {:noreply, :ok, timeout}
+  end
+  def handle_info(:timeout, :ok) do
+    Robotex.Actuator.DCMotorPair.spin_left(:locomotion, @speed)
+    {:noreply, :ok, :infinity}
   end
 
   defp react(sensors_value) do
     case sensors_value do
-      [true, true] -> Robotex.Actuator.DCMotorPair.forward(:locomotion, @speed)
-      [true, false] -> Robotex.Actuator.DCMotorPair.spin_left(:locomotion, @speed)
-      [false, true] -> Robotex.Actuator.DCMotorPair.spin_right(:locomotion, @speed)
-      [false, false] -> Robotex.Actuator.DCMotorPair.spin_right(:locomotion, @speed)
+      [true, true] ->
+        Robotex.Actuator.DCMotorPair.forward(:locomotion, @speed)
+        :infinity
+      [true, false] ->
+        Robotex.Actuator.DCMotorPair.spin_left(:locomotion, @speed)
+        :infinity
+      [false, true] ->
+        Robotex.Actuator.DCMotorPair.spin_right(:locomotion, @speed)
+        :infinity
+      [false, false] ->
+        Robotex.Actuator.DCMotorPair.spin_right(:locomotion, @speed)
+        1000
     end
   end
 end
