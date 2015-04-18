@@ -2,6 +2,7 @@ defmodule Robotex.Algorithm.LineFollower do
   use GenServer
 
   @speed 100
+  @time_to_rotate_90_deg 1000
 
   def __required_features__, do: [:line_sensors, :locomotion]
 
@@ -47,7 +48,7 @@ defmodule Robotex.Algorithm.LineFollower do
         :infinity
       [false, false] ->
         Robotex.Actuator.DCMotorPair.spin_right(:locomotion, @speed)
-        1000
+        @time_to_rotate_90_deg
     end
   end
 end
