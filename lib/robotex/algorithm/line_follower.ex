@@ -14,8 +14,8 @@ defmodule Robotex.Algorithm.LineFollower do
   end
 
   def init(_) do
-    sensor_values = Robotex.Sensor.BinaryArray.read(:line_sensors)
-    timeout = react(sensor_values)
+    sensors_value = Robotex.Sensor.BinaryArray.read(:line_sensors)
+    timeout = react(sensors_value)
 
     Robotex.Sensor.BinaryArray.set_notification(:line_sensors, true)
     {:ok, :ok, timeout}
@@ -26,7 +26,7 @@ defmodule Robotex.Algorithm.LineFollower do
   end
 
   def handle_info({:robotex_binary_sensor_array, sensors_value}, :ok) do
-    timeout = react(sensor_values)
+    timeout = react(sensors_value)
     {:noreply, :ok, timeout}
   end
   def handle_info(:timeout, :ok) do
