@@ -10,9 +10,8 @@ defmodule Robotex.CLI do
 
     {:ok, supervisor} = Robotex.Supervisor.start_link(robot, algorithm)
 
-    # change this of course
-    :timer.sleep(60_000)
-
+    IO.gets "Press return to exit"
+    
     Process.exit(supervisor, :shutdown)
   end
 
