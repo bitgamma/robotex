@@ -61,7 +61,7 @@ defmodule Robotex.Sensor.BinaryArray do
 
   defp notify_listener(state = %{notified_pid: nil}), do: state
   defp notify_listener(state = %{notified_pid: notified_pid}) do
-    send(notified_pid, {:robotex_binary_sensor_array, read_values(state)})
+    send(notified_pid, {:robotex_binary_sensor_array, self, read_values(state)})
     state
   end
 

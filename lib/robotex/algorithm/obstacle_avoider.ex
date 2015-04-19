@@ -28,7 +28,7 @@ defmodule Robotex.Algorithm.ObstacleAvoider do
     {:stop, :normal, state}
   end
 
-  def handle_info({:robotex_binary_sensor_array, sensors_value}, :ok) do
+  def handle_info({:robotex_binary_sensor_array, _, sensors_value}, :ok) do
     react(sensors_value)
     {:noreply, :ok}
   end
