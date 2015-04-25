@@ -17,7 +17,7 @@ defmodule Robotex.Algorithm.LineHunter do
   def init(_) do
     obstacle_sensors = Robotex.Sensor.BinaryArray.read(:obstacle_sensors)
     line_sensors = Robotex.Sensor.BinaryArray.read(:line_sensors)
-    {timeout, state} = react_all(nil, nil, :seeking, obstacle_sensors, line_sensors)
+    {timeout, state} = react_all(:infinity, nil, :seeking, obstacle_sensors, line_sensors)
 
     Robotex.Sensor.BinaryArray.set_notification(:line_sensors, true)
     Robotex.Sensor.BinaryArray.set_notification(:obstacle_sensors, true)
@@ -31,11 +31,11 @@ defmodule Robotex.Algorithm.LineHunter do
 
   def handle_info({:robotex_binary_sensor_array, sensor_array, sensors_value}, data) do
     %{obstacle_sensors: obstacle_sensors, line_sensors: line_sensors, state: state} = update_data(sensor_array, sensors_value, data)
-    {timeout, new_state} = react_all(nil, nil, state, obstacle_sensors, line_sensors)
+    {timeout, new_state} = react_all(:infinity, nil, state, obstacle_sensors, line_sensors)
     {:noreply, %{obstacle_sensors: obstacle_sensors, line_sensors: line_sensors, state: new_state}, timeout}
   end
   def handle_info(:timeout, %{obstacle_sensors: obstacle_sensors, line_sensors: line_sensors, state: state}) do
-    {timeout, new_state} = react_all(nil, nil, state, obstacle_sensors, line_sensors)
+    {timeout, new_state} = react_all(:infinity, nil, state, obstacle_sensors, line_sensors)
     {:noreply, %{obstacle_sensors: obstacle_sensors, line_sensors: line_sensors, state: new_state}, timeout}
   end
 
