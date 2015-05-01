@@ -2,6 +2,7 @@ defmodule Robotex.Algorithm.ObstacleAvoider do
   use GenServer
 
   @speed 100
+  @ms_per_degree 9
 
   def __required_features__, do: [:obstacle_sensors, :locomotion]
 
@@ -32,7 +33,10 @@ defmodule Robotex.Algorithm.ObstacleAvoider do
 
   defp react(sensors_value) do
     case sensors_value do
-      [true, _] ->
+      [true, true] ->
+        Robotex.Actuator.DCMotorPair.spin_right(:locomotion, @speed)
+        :timer.sleep(@ms_per_degree * 90)
+      [true, false] ->
         Robotex.Actuator.DCMotorPair.spin_right(:locomotion, @speed)
       [false, true] ->
         Robotex.Actuator.DCMotorPair.spin_left(:locomotion, @speed)
