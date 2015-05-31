@@ -55,7 +55,7 @@ defmodule Robotex.Algorithm.LineHunter do
     cond do
       Enum.member?(line_sensors, true) ->
         {:infinity, :following}
-      obstacle_sensors == [true, true] ->
+      Enum.member?(obstacle_sensors, true) ->
         {:infinity, :avoiding}
       true ->
         Robotex.Actuator.DCMotorPair.forward(:locomotion, @speed)
@@ -63,7 +63,7 @@ defmodule Robotex.Algorithm.LineHunter do
     end
   end
   defp react(:following, obstacle_sensors, line_sensors) do
-    if obstacle_sensors == [true, true] do
+    if Enum.member?(obstacle_sensors, true) do
       {:infinity, :avoiding}
     else
       do_follow_line(line_sensors)
@@ -74,7 +74,7 @@ defmodule Robotex.Algorithm.LineHunter do
     #someone to remove obstacle
     Robotex.Actuator.DCMotorPair.halt(:locomotion)
 
-    if obstacle_sensors == [true, true] do
+    if Enum.member?(obstacle_sensors, true) do
       {:infinity, :avoiding}
     else
       {:infinity, :seeking}
